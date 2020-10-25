@@ -1,0 +1,41 @@
+using System;
+using Finbuckle.MultiTenant;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Raven.Client.Documents.Session;
+
+namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
+{
+    /// <summary>
+    /// Locates the document session.
+    /// </summary>
+    /// <param name="provider">Service provider.</param>
+    /// <returns>Instance of an RavenDB async document session.</returns>
+    public delegate IAsyncDocumentSession DocumentSessionServiceLocator(IServiceProvider provider);
+
+    /// <summary>
+    /// Extension methods to <see cref="FinbuckleMultiTenantBuilder{TTenantInfo}"/> for adding RavenDB stores.
+    /// </summary>
+    public static class FinbuckleMultiTenantBuilderExtension
+    {
+        /// <summary>
+        /// Adds the RavenDb implementation of Finbuckle MultiTenant store.
+        /// </summary>
+        /// <param name="builder">Multi-tenant builder.</param>
+        /// <param name="documentSessionServiceLocator">RavenDb document session provider</param>
+        /// <typeparam name="TTenantInfo">Tenant type.</typeparam>
+        /// <returns>Multi tenant builder.</returns>
+        public static FinbuckleMultiTenantBuilder<TTenantInfo> WithRavenDbStore<TTenantInfo>(
+            this FinbuckleMultiTenantBuilder<TTenantInfo> builder,
+            DocumentSessionServiceLocator documentSessionServiceLocator)
+            where TTenantInfo : class, ITenantInfo, new()
+        {
+            builder.Services.TryAddScoped<DocumentSessionProvider>(
+                provider => () => documentSessionServiceLocator(provider)
+            );
+            builder.WithStore<FinbuckleRavenDbStore<TTenantInfo>>(ServiceLifetime.Scoped);
+
+            return builder;
+        }
+    }
+}

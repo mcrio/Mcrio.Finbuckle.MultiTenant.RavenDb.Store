@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Finbuckle.Multitenant.RavenDb.Store", "src\Finbuckle.Multitenant.RavenDb.Store\Finbuckle.Multitenant.RavenDb.Store.csproj", "{4DAA8F44-8C6F-4276-B1B1-443C282F4E10}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{048E0E50-FDEB-4A20-BB90-E26B6A74587A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{ECA004B4-C3B7-43CA-9799-3138AFB86BAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Finbuckle.Multitenant.RavenDb.Store.Tests", "tests\Finbuckle.Multitenant.RavenDb.Store.Tests\Finbuckle.Multitenant.RavenDb.Store.Tests.csproj", "{4E791119-FE7A-4D7F-B93D-C1B19B494DC4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4DAA8F44-8C6F-4276-B1B1-443C282F4E10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DAA8F44-8C6F-4276-B1B1-443C282F4E10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DAA8F44-8C6F-4276-B1B1-443C282F4E10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DAA8F44-8C6F-4276-B1B1-443C282F4E10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E791119-FE7A-4D7F-B93D-C1B19B494DC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E791119-FE7A-4D7F-B93D-C1B19B494DC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E791119-FE7A-4D7F-B93D-C1B19B494DC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E791119-FE7A-4D7F-B93D-C1B19B494DC4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4DAA8F44-8C6F-4276-B1B1-443C282F4E10} = {048E0E50-FDEB-4A20-BB90-E26B6A74587A}
+		{4E791119-FE7A-4D7F-B93D-C1B19B494DC4} = {ECA004B4-C3B7-43CA-9799-3138AFB86BAE}
+	EndGlobalSection
+EndGlobal
