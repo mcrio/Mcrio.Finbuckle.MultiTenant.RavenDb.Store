@@ -22,7 +22,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
         /// Adds the RavenDb implementation of Finbuckle MultiTenant store.
         /// </summary>
         /// <param name="builder">Multi-tenant builder.</param>
-        /// <param name="documentSessionServiceLocator">RavenDb document session provider</param>
+        /// <param name="documentSessionServiceLocator">RavenDb document session provider.</param>
         /// <typeparam name="TTenantInfo">Tenant type.</typeparam>
         /// <returns>Multi tenant builder.</returns>
         public static FinbuckleMultiTenantBuilder<TTenantInfo> WithRavenDbStore<TTenantInfo>(
