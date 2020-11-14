@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Finbuckle.MultiTenant;
+using Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Interfaces;
+using Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Model;
 using Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb;
 using Microsoft.Extensions.Logging;
 using Raven.Client.Documents;
@@ -16,7 +18,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
     /// MultiTenant store based on the RavenDb database.
     /// </summary>
     /// <typeparam name="T">Tenant type.</typeparam>
-    public class FinbuckleRavenDbStore<T> : IMultiTenantStore<T>
+    public class FinbuckleRavenDbStore<T> : IMultiTenantStore<T>, IPaginatedMultiTenantStore<T>
         where T : class, ITenantInfo, new()
     {
         private readonly ILogger<FinbuckleRavenDbStore<T>> _logger;
@@ -45,7 +47,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
 
             CheckRequiredFieldsOrThrow(tenantInfo);
 
-            var compareExchangeUtility = new CompareExchangeUtility(_documentSession);
+            CompareExchangeUtility compareExchangeUtility = CreateCompareExchangeUtility();
             var entitySaveSuccess = false;
             var identifierReserveSuccess = false;
 
@@ -108,7 +110,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
                 throw new Exception("Tenant is expected to be already loaded in the RavenDB session.");
             }
 
-            var compareExchangeUtility = new CompareExchangeUtility(_documentSession);
+            CompareExchangeUtility compareExchangeUtility = CreateCompareExchangeUtility();
 
             // if identifier has changed, and if yes make sure it's unique by reserving it
             PropertyChange<string>? identifierChange = null;
@@ -198,7 +200,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
             {
                 if (deleteSuccess)
                 {
-                    var compareExchangeUtility = new CompareExchangeUtility(_documentSession);
+                    CompareExchangeUtility compareExchangeUtility = CreateCompareExchangeUtility();
 
                     bool removeIdentifierCmpE = await compareExchangeUtility.RemoveReservationAsync(
                         CompareExchangeUtility.ReservationType.Identifier,
@@ -245,6 +247,28 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
             }
 
             return allTenants;
+        }
+
+        /// <inheritdoc />
+        public async Task<PaginatedResult<T>> GetAllPaginatedAsync(int page, int itemsPerPage)
+        {
+            if (page < 1)
+            {
+                throw new ArgumentException($"Argument {nameof(page)} must not be lower than 1.");
+            }
+
+            if (itemsPerPage < 1)
+            {
+                throw new ArgumentException($"Argument {nameof(itemsPerPage)} must not be lower than 1.");
+            }
+
+            List<T> result = await _documentSession.Query<T>()
+                .Statistics(out QueryStatistics stats)
+                .Skip((page - 1) * itemsPerPage)
+                .Take(itemsPerPage)
+                .ToListAsync();
+
+            return new PaginatedResult<T>(stats.TotalResults, result);
         }
 
         /// <summary>

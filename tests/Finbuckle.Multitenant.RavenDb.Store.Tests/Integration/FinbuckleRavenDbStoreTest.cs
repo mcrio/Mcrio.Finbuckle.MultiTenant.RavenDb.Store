@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Finbuckle.MultiTenant;
 using FluentAssertions;
+using Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Model;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -126,7 +127,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldUpdateTenantDataWhichAlsoHasNewIdentifier()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             {
                 FinbuckleRavenDbStore<TenantInfo> store = CreateTenantStore();
@@ -177,7 +178,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldNotUpdateIfTenantModifiedInAnotherSession()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             {
                 FinbuckleRavenDbStore<TenantInfo> storeA = CreateTenantStore();
@@ -229,7 +230,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldNotUpdateTenantIfNewIdentifierIsNotUnique()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             {
                 FinbuckleRavenDbStore<TenantInfo> storeA = CreateTenantStore();
@@ -274,7 +275,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldRemoveExistingTenant()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             {
                 FinbuckleRavenDbStore<TenantInfo> storeA = CreateTenantStore();
@@ -301,7 +302,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldNotRemoveIfTenantDoesNotExist()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             FinbuckleRavenDbStore<TenantInfo> store = CreateTenantStore();
             (await store.TryRemoveAsync("some-non-existing-id")).Should().BeFalse();
@@ -311,7 +312,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldNotRemoveIfTenantModifiedInAnotherSession()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             {
                 FinbuckleRavenDbStore<TenantInfo> storeA = CreateTenantStore();
@@ -356,7 +357,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldGetSingleTenantByIdentifier()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             FinbuckleRavenDbStore<TenantInfo> store = CreateTenantStore();
 
@@ -368,7 +369,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldNotGetTenantIfNotExistsByIdentifier()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             FinbuckleRavenDbStore<TenantInfo> store = CreateTenantStore();
 
@@ -379,7 +380,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldGetTenantById()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             {
                 var tenant = new TenantInfo
@@ -400,7 +401,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldNotGetTenantByIdIfNotExists()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             FinbuckleRavenDbStore<TenantInfo> store = CreateTenantStore();
 
@@ -411,7 +412,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         [Fact]
         public async Task ShouldGetAllTenants()
         {
-            await SeedTenantDataAsync();
+            await Seed3TenantsAsync();
 
             FinbuckleRavenDbStore<TenantInfo> store = CreateTenantStore();
 
@@ -425,6 +426,34 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
             tenants.SingleOrDefault(tenant => tenant.Identifier == "tenant3").Should().NotBeNull();
         }
 
+        [Fact]
+        public async Task ShouldGetAllTenantsWithPagination()
+        {
+            await Seed3TenantsAsync();
+            FinbuckleRavenDbStore<TenantInfo> store = CreateTenantStore();
+
+            {
+                // per page is higher than tenants count so get all tenants
+                PaginatedResult<TenantInfo> resultAll = await store.GetAllPaginatedAsync(1, 10);
+                resultAll.TotalItemsCount.Should().Be(3);
+                resultAll.Items.Count().Should().Be(3);
+            }
+
+            {
+                // get sliced result
+                PaginatedResult<TenantInfo> resultSliced = await store.GetAllPaginatedAsync(1, 2);
+                resultSliced.TotalItemsCount.Should().Be(3);
+                resultSliced.Items.Count().Should().Be(2);
+            }
+
+            {
+                // if out of bounds have empty result
+                PaginatedResult<TenantInfo> resultOutOfBounds = await store.GetAllPaginatedAsync(10, 2);
+                resultOutOfBounds.TotalItemsCount.Should().Be(3);
+                resultOutOfBounds.Items.Count().Should().Be(0);
+            }
+        }
+
         private FinbuckleRavenDbStore<TenantInfo> CreateTenantStore()
         {
             var logger = new Mock<ILogger<FinbuckleRavenDbStore<TenantInfo>>>();
@@ -434,7 +463,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
             );
         }
 
-        private async Task SeedTenantDataAsync()
+        private async Task Seed3TenantsAsync()
         {
             TenantInfo[] tenants =
             {
