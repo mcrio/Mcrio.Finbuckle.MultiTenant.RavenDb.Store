@@ -18,7 +18,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
     /// MultiTenant store based on the RavenDb database.
     /// </summary>
     /// <typeparam name="T">Tenant type.</typeparam>
-    public class FinbuckleRavenDbStore<T> : IMultiTenantStore<T>, IPaginatedMultiTenantStore<T>
+    public class FinbuckleRavenDbStore<T> : IMultiTenantStore<T>, IHavePaginatedMultiTenantStore<T>
         where T : class, ITenantInfo, new()
     {
         private readonly ILogger<FinbuckleRavenDbStore<T>> _logger;

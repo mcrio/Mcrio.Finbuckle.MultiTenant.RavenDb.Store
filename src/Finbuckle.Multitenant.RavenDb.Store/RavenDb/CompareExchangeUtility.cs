@@ -136,7 +136,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
             IDocumentStore documentStore = _documentSession.Advanced.DocumentStore;
 
             CompareExchangeResult<TValue> compareExchangeResult = await documentStore.Operations.SendAsync(
-                new PutCompareExchangeValueOperation<TValue>(cmpExchangeKey, data, 0)
+                new PutCompareExchangeValueOperation<TValue>(cmpExchangeKey, data!, 0)
             ).ConfigureAwait(false);
 
             return compareExchangeResult.Successful;

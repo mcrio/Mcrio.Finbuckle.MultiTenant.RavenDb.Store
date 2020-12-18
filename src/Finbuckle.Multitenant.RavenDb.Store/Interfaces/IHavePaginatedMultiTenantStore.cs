@@ -8,7 +8,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Interfaces
     /// Defines method for retrieving tenant data with pagination.
     /// </summary>
     /// <typeparam name="TTenantInfo">Tenant-info type.</typeparam>
-    public interface IPaginatedMultiTenantStore<TTenantInfo>
+    public interface IHavePaginatedMultiTenantStore<TTenantInfo>
         where TTenantInfo : ITenantInfo
     {
         /// <summary>
