@@ -27,7 +27,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
 
                 (await store.TryAddAsync(tenantA)).Should().BeTrue();
                 await AssertCompareExchangeKeyExistsWithValueAsync(
-                    $"tnt-identifier/{tenantA.Identifier}",
+                    $"tidentifier/{tenantA.Identifier}",
                     tenantA.Id
                 );
             }
@@ -42,7 +42,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 };
                 (await store.TryAddAsync(tenantB)).Should().BeTrue();
                 await AssertCompareExchangeKeyExistsWithValueAsync(
-                    $"tnt-identifier/{tenantB.Identifier}",
+                    $"tidentifier/{tenantB.Identifier}",
                     tenantB.Id
                 );
 
@@ -54,7 +54,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 };
                 (await store.TryAddAsync(tenantC)).Should().BeTrue();
                 await AssertCompareExchangeKeyExistsWithValueAsync(
-                    $"tnt-identifier/{tenantC.Identifier}",
+                    $"tidentifier/{tenantC.Identifier}",
                     tenantC.Id
                 );
             }
@@ -146,7 +146,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 tenant.Identifier.Should().Be("tenant-abc");
                 tenant.Name.Should().Be("Tenant ABC");
                 await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tnt-identifier/tenant-abc",
+                    "tidentifier/tenant-abc",
                     tenant.Id
                 );
 
@@ -158,11 +158,11 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 WaitForUserToContinueTheTest(DocumentStore);
 
                 await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tnt-identifier/new-identifier",
+                    "tidentifier/new-identifier",
                     tenant.Id
                 );
                 await AssertCompareExchangeKeyDoesNotExistAsync(
-                    "tnt-identifier/tenant-abc",
+                    "tidentifier/tenant-abc",
                     "old identifier was deleted"
                 );
             }
@@ -210,15 +210,15 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 (await storeA.TryUpdateAsync(tenantFromStoreA)).Should().BeFalse();
 
                 await AssertCompareExchangeKeyDoesNotExistAsync(
-                    "tnt-identifier/tenant-abc",
+                    "tidentifier/tenant-abc",
                     "was modified from storeB."
                 );
                 await AssertCompareExchangeKeyDoesNotExistAsync(
-                    "tnt-identifier/new-identifier",
+                    "tidentifier/new-identifier",
                     "modification from storeA failed due to concurrency."
                 );
                 await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tnt-identifier/new-identifier22222",
+                    "tidentifier/new-identifier22222",
                     tenantFromStoreA.Id,
                     "storeB successfully modified the tenant."
                 );
@@ -262,11 +262,11 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 WaitForUserToContinueTheTest(DocumentStore);
 
                 await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tnt-identifier/tenant-foobar",
+                    "tidentifier/tenant-foobar",
                     "foobar"
                 );
                 await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tnt-identifier/tenant-abc",
+                    "tidentifier/tenant-abc",
                     "abc"
                 );
             }
@@ -292,7 +292,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 FinbuckleRavenDbStore<TenantInfo> store = CreateTenantStore();
                 (await store.TryRemoveAsync("abc")).Should().BeTrue();
                 await AssertCompareExchangeKeyDoesNotExistAsync(
-                    "tnt-identifier/tenant-abc",
+                    "tidentifier/tenant-abc",
                     "we removed the tenant"
                 );
                 (await store.TryGetAsync("abc")).Should().BeNull();
@@ -342,7 +342,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 // try to delete from store A
                 (await storeA.TryRemoveAsync("abc")).Should().BeFalse();
                 await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tnt-identifier/new-identifier22222",
+                    "tidentifier/new-identifier22222",
                     "abc",
                     "storeB updated the tenant"
                 );

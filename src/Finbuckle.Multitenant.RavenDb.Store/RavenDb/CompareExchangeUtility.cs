@@ -105,7 +105,8 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
         {
             return reservationType switch
             {
-                ReservationType.Identifier => "tnt-identifier",
+                // ReSharper disable once StringLiteralTypo
+                ReservationType.Identifier => "tidentifier",
                 _ => throw new Exception($"Unhandled reservation type {reservationType}")
             };
         }
