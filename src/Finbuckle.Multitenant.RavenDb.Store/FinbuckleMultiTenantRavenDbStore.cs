@@ -21,9 +21,6 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
     public class FinbuckleRavenDbStore<T> : IMultiTenantStore<T>, IHavePaginatedMultiTenantStore<T>
         where T : class, ITenantInfo, new()
     {
-        private readonly ILogger<FinbuckleRavenDbStore<T>> _logger;
-        private readonly IAsyncDocumentSession _documentSession;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="FinbuckleRavenDbStore{T}"/> class.
         /// </summary>
@@ -33,9 +30,19 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
             DocumentSessionProvider documentSessionProvider,
             ILogger<FinbuckleRavenDbStore<T>> logger)
         {
-            _logger = logger;
-            _documentSession = documentSessionProvider();
+            Logger = logger;
+            Session = documentSessionProvider();
         }
+
+        /// <summary>
+        /// Gets the document session.
+        /// </summary>
+        protected IAsyncDocumentSession Session { get; }
+
+        /// <summary>
+        /// Gets the logger.
+        /// </summary>
+        protected ILogger<FinbuckleRavenDbStore<T>> Logger { get; }
 
         /// <inheritdoc/>
         public async Task<bool> TryAddAsync(T tenantInfo)
@@ -53,7 +60,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
 
             try
             {
-                await _documentSession.StoreAsync(tenantInfo, string.Empty, tenantInfo.Id)
+                await Session.StoreAsync(tenantInfo, string.Empty, tenantInfo.Id)
                     .ConfigureAwait(false);
 
                 identifierReserveSuccess = await compareExchangeUtility.CreateReservationAsync(
@@ -68,20 +75,20 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
                     throw new Exception("Tenant identifier not unique");
                 }
 
-                await _documentSession.SaveChangesAsync().ConfigureAwait(false);
+                await Session.SaveChangesAsync().ConfigureAwait(false);
                 entitySaveSuccess = true;
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding new Tenant entity. Error: {}", ex.Message);
+                Logger.LogError(ex, "Error adding new Tenant entity. Error: {}", ex.Message);
             }
             finally
             {
                 if (entitySaveSuccess == false && identifierReserveSuccess)
                 {
-                    _logger.LogDebug(
+                    Logger.LogDebug(
                         "Tenant create failed persisting entity. Deleting related identifier compare exchange key."
                     );
                     await compareExchangeUtility.RemoveReservationAsync(
@@ -105,7 +112,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
 
             CheckRequiredFieldsOrThrow(tenantInfo);
 
-            if (!_documentSession.Advanced.IsLoaded(tenantInfo.Id))
+            if (!Session.Advanced.IsLoaded(tenantInfo.Id))
             {
                 throw new Exception("Tenant is expected to be already loaded in the RavenDB session.");
             }
@@ -119,7 +126,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
 
             try
             {
-                identifierChange = await _documentSession.ReserveIfPropertyChangedAsync(
+                identifierChange = await Session.ReserveIfPropertyChangedAsync(
                     compareExchangeUtility,
                     tenantInfo,
                     nameof(tenantInfo.Identifier),
@@ -129,17 +136,17 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
                     tenantInfo.Id
                 ).ConfigureAwait(false);
 
-                string changeVector = _documentSession.Advanced.GetChangeVectorFor(tenantInfo);
-                await _documentSession.StoreAsync(tenantInfo, changeVector, tenantInfo.Id)
+                string changeVector = Session.Advanced.GetChangeVectorFor(tenantInfo);
+                await Session.StoreAsync(tenantInfo, changeVector, tenantInfo.Id)
                     .ConfigureAwait(false);
-                await _documentSession.SaveChangesAsync().ConfigureAwait(false);
+                await Session.SaveChangesAsync().ConfigureAwait(false);
 
                 updateSuccess = true;
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating Tenant entity. Error: {}", ex.Message);
+                Logger.LogError(ex, "Error updating Tenant entity. Error: {}", ex.Message);
             }
             finally
             {
@@ -156,7 +163,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
                     ).ConfigureAwait(false);
                     if (!removeResult)
                     {
-                        _logger.LogError(
+                        Logger.LogError(
                             $"Failed removing identifier '{identifierReservationToRemove}' from compare exchange "
                         );
                     }
@@ -174,10 +181,10 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
                 throw new ArgumentException(nameof(tenantId) + " must not be empty.");
             }
 
-            T? entity = await _documentSession.LoadAsync<T>(tenantId);
+            T? entity = await Session.LoadAsync<T>(tenantId);
             if (entity is null)
             {
-                _logger.LogError("Error removing Tenant entity as entity was not found by id {}", tenantId);
+                Logger.LogError("Error removing Tenant entity as entity was not found by id {}", tenantId);
                 return false;
             }
 
@@ -185,16 +192,16 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
 
             try
             {
-                string changeVector = _documentSession.Advanced.GetChangeVectorFor(entity);
-                _documentSession.Delete(entity.Id, changeVector);
-                await _documentSession.SaveChangesAsync().ConfigureAwait(false);
+                string changeVector = Session.Advanced.GetChangeVectorFor(entity);
+                Session.Delete(entity.Id, changeVector);
+                await Session.SaveChangesAsync().ConfigureAwait(false);
                 deleteSuccess = true;
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting Tenant entity. Error: {}", ex.Message);
+                Logger.LogError(ex, "Error deleting Tenant entity. Error: {}", ex.Message);
             }
             finally
             {
@@ -209,7 +216,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
                     ).ConfigureAwait(false);
                     if (!removeIdentifierCmpE)
                     {
-                        _logger.LogError(
+                        Logger.LogError(
                             $"Failed removing tenant identifier '{entity.Identifier}' from compare exchange "
                         );
                     }
@@ -222,21 +229,21 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
         /// <inheritdoc />
         public Task<T> TryGetByIdentifierAsync(string identifier)
         {
-            return Queryable.Where(_documentSession.Query<T>(), entity => entity.Identifier.Equals(identifier))
+            return Queryable.Where(Session.Query<T>(), entity => entity.Identifier.Equals(identifier))
                 .SingleOrDefaultAsync();
         }
 
         /// <inheritdoc />
         public Task<T> TryGetAsync(string id)
         {
-            return _documentSession.LoadAsync<T>(id);
+            return Session.LoadAsync<T>(id);
         }
 
         /// <inheritdoc />
         public async Task<IEnumerable<T>> GetAllAsync()
         {
-            IRavenQueryable<T> query = _documentSession.Query<T>();
-            IAsyncEnumerator<StreamResult<T>> results = await _documentSession.Advanced
+            IRavenQueryable<T> query = Session.Query<T>();
+            IAsyncEnumerator<StreamResult<T>> results = await Session.Advanced
                 .StreamAsync(query)
                 .ConfigureAwait(false);
 
@@ -262,7 +269,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
                 throw new ArgumentException($"Argument {nameof(itemsPerPage)} must not be lower than 1.");
             }
 
-            List<T> result = await _documentSession.Query<T>()
+            List<T> result = await Session.Query<T>()
                 .Statistics(out QueryStatistics stats)
                 .Skip((page - 1) * itemsPerPage)
                 .Take(itemsPerPage)
@@ -295,7 +302,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
         /// <returns>Instance of <see cref="CompareExchangeUtility"/>.</returns>
         protected virtual CompareExchangeUtility CreateCompareExchangeUtility()
         {
-            return new CompareExchangeUtility(_documentSession);
+            return new CompareExchangeUtility(Session);
         }
     }
 }
