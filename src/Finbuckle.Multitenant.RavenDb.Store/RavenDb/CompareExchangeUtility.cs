@@ -77,26 +77,6 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
         }
 
         /// <summary>
-        /// Retrieves an existing compare exchange value if it exists.
-        /// </summary>
-        /// <param name="reservationType">Reservation type.</param>
-        /// <param name="entity">Optional entity we are getting the reservation for.</param>
-        /// <param name="expectedUniqueValue">Unique value for the given reservation type.</param>
-        /// <typeparam name="TValue">Type of compare exchange data.</typeparam>
-        /// <typeparam name="TTenantInfo">Type of entity we are storing the unique value for.</typeparam>
-        /// <returns>The <see cref="Task"/> that represents the asynchronous operation.</returns>
-        internal Task<CompareExchangeValue<TValue>?> GetReservationAsync<TValue, TTenantInfo>(
-            ReservationType reservationType,
-            TTenantInfo entity,
-            string expectedUniqueValue)
-            where TTenantInfo : ITenantInfo?
-        {
-            return GetReservationAsync<TValue>(
-                CreateCompareExchangeKey(reservationType, entity, expectedUniqueValue)
-            );
-        }
-
-        /// <summary>
         /// Gets the compare exchange reservation key prefix for the given reservation type.
         /// </summary>
         /// <param name="reservationType"></param>
@@ -115,9 +95,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
         /// Creates the compare exchange key for th given reservation type, entity and unique value.
         /// </summary>
         /// <param name="reservationType">Type of reservation.</param>
-        /// <param name="entity">Optional entity related to the reservation.
-        /// Be aware it is optional and may not be available always, like in scenarios when looking up compare
-        /// exchange key without knowing the entity upfront.</param>
+        /// <param name="entity">Entity related to the reservation.</param>
         /// <param name="expectedUniqueValue">The unique value.</param>
         /// <typeparam name="TTenantInfo">Type of entity we are making the reservation for.</typeparam>
         /// <returns>The complete compare exchange key.</returns>
