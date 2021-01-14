@@ -30,10 +30,32 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
             DocumentSessionServiceLocator documentSessionServiceLocator)
             where TTenantInfo : class, ITenantInfo, new()
         {
+            return WithRavenDbStore<TTenantInfo, FinbuckleRavenDbStore<TTenantInfo>>(
+                builder,
+                documentSessionServiceLocator
+            );
+        }
+
+        /// <summary>
+        /// Adds the RavenDb implementation of Finbuckle MultiTenant store.
+        /// </summary>
+        /// <param name="builder">Multi-tenant builder.</param>
+        /// <param name="documentSessionServiceLocator">RavenDb document session provider.</param>
+        /// <typeparam name="TTenantInfo">Tenant type.</typeparam>
+        /// <typeparam name="TRavenDbStore">RavenDb store type.</typeparam>
+        /// <returns>Multi tenant builder.</returns>
+        public static FinbuckleMultiTenantBuilder<TTenantInfo> WithRavenDbStore<
+            TTenantInfo,
+            TRavenDbStore>(
+            this FinbuckleMultiTenantBuilder<TTenantInfo> builder,
+            DocumentSessionServiceLocator documentSessionServiceLocator)
+            where TTenantInfo : class, ITenantInfo, new()
+            where TRavenDbStore : IMultiTenantStore<TTenantInfo>
+        {
             builder.Services.TryAddScoped<DocumentSessionProvider>(
                 provider => () => documentSessionServiceLocator(provider)
             );
-            builder.WithStore<FinbuckleRavenDbStore<TTenantInfo>>(ServiceLifetime.Scoped);
+            builder.WithStore<TRavenDbStore>(ServiceLifetime.Scoped);
 
             return builder;
         }
