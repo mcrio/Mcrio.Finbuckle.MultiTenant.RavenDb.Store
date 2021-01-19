@@ -45,7 +45,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
         protected ILogger<FinbuckleRavenDbStore<T>> Logger { get; }
 
         /// <inheritdoc/>
-        public async Task<bool> TryAddAsync(T tenantInfo)
+        public virtual async Task<bool> TryAddAsync(T tenantInfo)
         {
             if (tenantInfo == null)
             {
@@ -103,7 +103,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
         }
 
         /// <inheritdoc/>
-        public async Task<bool> TryUpdateAsync(T tenantInfo)
+        public virtual async Task<bool> TryUpdateAsync(T tenantInfo)
         {
             if (tenantInfo == null)
             {
@@ -174,7 +174,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
         }
 
         /// <inheritdoc />
-        public async Task<bool> TryRemoveAsync(string tenantId)
+        public virtual async Task<bool> TryRemoveAsync(string tenantId)
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -227,20 +227,20 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
         }
 
         /// <inheritdoc />
-        public Task<T> TryGetByIdentifierAsync(string identifier)
+        public virtual Task<T> TryGetByIdentifierAsync(string identifier)
         {
             return Queryable.Where(Session.Query<T>(), entity => entity.Identifier.Equals(identifier))
                 .SingleOrDefaultAsync();
         }
 
         /// <inheritdoc />
-        public Task<T> TryGetAsync(string id)
+        public virtual Task<T> TryGetAsync(string id)
         {
             return Session.LoadAsync<T>(id);
         }
 
         /// <inheritdoc />
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             IRavenQueryable<T> query = Session.Query<T>();
             IAsyncEnumerator<StreamResult<T>> results = await Session.Advanced
@@ -257,7 +257,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
         }
 
         /// <inheritdoc />
-        public async Task<PaginatedResult<T>> GetAllPaginatedAsync(int page, int itemsPerPage)
+        public virtual async Task<PaginatedResult<T>> GetAllPaginatedAsync(int page, int itemsPerPage)
         {
             if (page < 1)
             {
