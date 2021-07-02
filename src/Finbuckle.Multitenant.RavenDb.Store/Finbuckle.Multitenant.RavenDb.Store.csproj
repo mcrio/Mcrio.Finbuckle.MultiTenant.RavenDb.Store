@@ -24,8 +24,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Finbuckle.MultiTenant" Version="6.1.0" />
-        <PackageReference Include="RavenDB.Client" Version="5.1.2" />
+        <PackageReference Include="Finbuckle.MultiTenant" Version="6.2.0" />
+        <PackageReference Include="RavenDB.Client" Version="5.2.1" />
         <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
