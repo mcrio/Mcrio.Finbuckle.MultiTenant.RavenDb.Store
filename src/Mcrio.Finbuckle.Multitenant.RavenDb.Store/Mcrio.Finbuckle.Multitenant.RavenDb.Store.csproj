@@ -11,11 +11,9 @@
         <Authors>Nikola Josipović</Authors>
         <Company>https://github.com/mcrio</Company>
         <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-        <!--        todo: github url below -->
-        <RepositoryUrl>https://github.com/mcrio/</RepositoryUrl>
+        <RepositoryUrl>https://github.com/mcrio/Mcrio.Finbuckle.MultiTenant.RavenDb.Store</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <!--        todo: github url below -->
-        <PackageProjectUrl>https://github.com/mcrio/</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/mcrio/Mcrio.Finbuckle.MultiTenant.RavenDb.Store</PackageProjectUrl>
         <PackageTags>ravendb;finbuckle;store;multi-tenant;finbuckle.multitenant;</PackageTags>
 
         <Version Condition="'$(RELEASE_VERSION)' != ''">$(RELEASE_VERSION)</Version>

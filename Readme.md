@@ -17,7 +17,7 @@ Finbuckle.MultiTenant is open source multi-tenancy middleware for .NET.
 
 ### NuGet Package
 
-Using the NuGet package manager install the [Mcrio.Finbuckle.Multitenant.RavenDb.Store](#) package, or add the following line to the .csproj file:
+Using the NuGet package manager install the [Mcrio.Finbuckle.Multitenant.RavenDb.Store](https://www.nuget.org/packages/Mcrio.Finbuckle.MultiTenant.RavenDb.Store) package, or add the following line to the .csproj file:
 
 ```xml
 <ItemGroup>
