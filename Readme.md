@@ -6,12 +6,12 @@
 [![Build status](https://dev.azure.com/midnight-creative/Mcrio.Finbuckle.MultiTenant.RavenDb.Store/_apis/build/status/Build)](https://dev.azure.com/midnight-creative/Mcrio.Finbuckle.MultiTenant.RavenDb.Store/_build/latest?definitionId=7)
 ![Nuget](https://img.shields.io/nuget/v/Mcrio.Finbuckle.MultiTenant.RavenDb.Store)
 
-RavenDB implementations of the Finbuckle.MultiTenant store.
-For more information about Finbuckle visit the [official website](https://www.finbuckle.com).
+RavenDB implementation of the Finbuckle.MultiTenant store.
 
 #### What is Finbuckle Multi-Tenant
 
 Finbuckle.MultiTenant is open source multi-tenancy middleware for .NET.
+For more information about Finbuckle.MultiTenant visit the [official website](https://www.finbuckle.com).
 
 ## Getting Started
 
@@ -33,7 +33,7 @@ Add the following lines to Startup.cs.
 services
     // adds finbuckle support as per official documentation
     .AddMultiTenant<TenantInfo>()
-    // adds RavenDb stores by providing Tenant info type and RavenDb store type.
+    // adds RavenDb store by providing Tenant info type and RavenDb store type.
     // both can be extended to suit your requirements
     .WithRavenDbStore<TenantInfo, FinbuckleRavenDbStore<TenantInfo>>(
         // define how IAsyncDocumentSession is resolved from DI
@@ -44,8 +44,8 @@ services
 
 ### Custom Tenant info data
 
-Extend `Finbuckle.MultiTenant.TenantInfo` or `Finbuckle.MultiTenant.ITenantInfo` and use when 
-adding Finbuckle.MultiTenant and the RavenDb stores.
+Extend `Finbuckle.MultiTenant.TenantInfo` or `Finbuckle.MultiTenant.ITenantInfo` and provide types when 
+adding Finbuckle.MultiTenant and the RavenDb store.
 
 ### Paginated results
 
