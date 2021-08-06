@@ -28,7 +28,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Finbuckle.Multitenant.RavenDb.Store\Finbuckle.Multitenant.RavenDb.Store.csproj" />
+      <ProjectReference Include="..\..\src\Mcrio.Finbuckle.Multitenant.RavenDb.Store\Mcrio.Finbuckle.Multitenant.RavenDb.Store.csproj" />
     </ItemGroup>
 
 </Project>
