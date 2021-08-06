@@ -48,7 +48,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
             ReservationType reservationType,
             TTenantInfo entity,
             string expectedUniqueValue,
-            TValue data = default)
+            TValue data = default!)
             where TTenantInfo : ITenantInfo
         {
             return CreateReservationAsync(
@@ -110,7 +110,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
 
         private async Task<bool> CreateReservationAsync<TValue>(
             string cmpExchangeKey,
-            TValue data = default)
+            TValue data = default!)
         {
             IDocumentStore documentStore = _documentSession.Advanced.DocumentStore;
 

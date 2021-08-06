@@ -82,14 +82,18 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Error adding new Tenant entity. Error: {}", ex.Message);
+                Logger.LogError(
+                    ex,
+                    "Error adding new Tenant entity. Error: {Message}",
+                    ex.Message
+                );
             }
             finally
             {
                 if (entitySaveSuccess == false && identifierReserveSuccess)
                 {
                     Logger.LogDebug(
-                        "Tenant create failed persisting entity. Deleting related identifier compare exchange key."
+                        "Tenant create failed persisting entity. Deleting related identifier compare exchange key"
                     );
                     await compareExchangeUtility.RemoveReservationAsync(
                         CompareExchangeUtility.ReservationType.Identifier,
@@ -146,7 +150,11 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Error updating Tenant entity. Error: {}", ex.Message);
+                Logger.LogError(
+                    ex,
+                    "Error updating Tenant entity. Error: {Message}",
+                    ex.Message
+                );
             }
             finally
             {
@@ -164,7 +172,8 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
                     if (!removeResult)
                     {
                         Logger.LogError(
-                            $"Failed removing identifier '{identifierReservationToRemove}' from compare exchange "
+                            "Failed removing identifier '{IdentifierReservationToRemove}' from compare exchange ",
+                            identifierReservationToRemove
                         );
                     }
                 }
@@ -184,7 +193,10 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
             T? entity = await Session.LoadAsync<T>(tenantId);
             if (entity is null)
             {
-                Logger.LogError("Error removing Tenant entity as entity was not found by id {}", tenantId);
+                Logger.LogError(
+                    "Error removing Tenant entity as entity was not found by id {TenantId}",
+                    tenantId
+                );
                 return false;
             }
 
@@ -201,7 +213,11 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Error deleting Tenant entity. Error: {}", ex.Message);
+                Logger.LogError(
+                    ex,
+                    "Error deleting Tenant entity. Error: {Message}",
+                    ex.Message
+                );
             }
             finally
             {
@@ -217,7 +233,8 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
                     if (!removeIdentifierCmpE)
                     {
                         Logger.LogError(
-                            $"Failed removing tenant identifier '{entity.Identifier}' from compare exchange "
+                            "Failed removing tenant identifier '{EntityIdentifier}' from compare exchange ",
+                            entity.Identifier
                         );
                     }
                 }
