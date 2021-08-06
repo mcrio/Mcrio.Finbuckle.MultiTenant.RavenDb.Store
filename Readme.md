@@ -1,5 +1,5 @@
-<img src="./ravendb-logo.png" height="100px" alt="RavenDB" />
-<img src="./finbuckle-multitenant-logo.png" height="130px" alt="Finbuckle Multitenant" />
+<img src="https://github.com/mcrio/Mcrio.Finbuckle.MultiTenant.RavenDb.Store/raw/master/ravendb-logo.png" height="100px" alt="RavenDB" />
+<img src="https://github.com/mcrio/Mcrio.Finbuckle.MultiTenant.RavenDb.Store/raw/master/finbuckle-multitenant-logo.png" height="130px" alt="Finbuckle Multitenant" />
 
 # Finbuckle Multi-Tenant on RavenDB
 
