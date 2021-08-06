@@ -3,6 +3,8 @@
 
 # Finbuckle Multi-Tenant on RavenDB
 
+[![Build status](https://dev.azure.com/midnight-creative/Mcrio.Finbuckle.MultiTenant.RavenDb.Store/_apis/build/status/Build)](https://dev.azure.com/midnight-creative/Mcrio.Finbuckle.MultiTenant.RavenDb.Store/_build/latest?definitionId=7)
+
 RavenDB implementations of the Finbuckle.MultiTenant store.
 For more information about Finbuckle visit the [official website](https://www.finbuckle.com).
 
