@@ -45,7 +45,7 @@ services
 ### Custom Tenant info data
 
 Extend `Finbuckle.MultiTenant.TenantInfo` or `Finbuckle.MultiTenant.ITenantInfo` and use when 
-registering FinbuckleMultiTenant and the RavenDb stores.
+adding Finbuckle.MultiTenant and the RavenDb stores.
 
 ### Paginated results
 
