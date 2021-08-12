@@ -60,6 +60,13 @@ Compare exchange key prefixes can be modified by following:
   an extended `CompareExchangeUtility` that will override the functionality for generating
   compare exchange key prefixes. See `CompareExchangeUtility.GetKeyPrefix` for predefined compare exchange key prefixes.
 
+### ID generation
+
+If using the provided `Finbuckle.MultiTenant.TenantInfo` class, `Id`  can be changed after object construction.
+By default set to `null` which implies HiLo identifier generation.
+Refer to official [RavenDB document](https://ravendb.net/docs/article-page/5.2/working-with-document-identifiers/client-api/document-identifiers/working-with-document-identifiers) about identifier generation strategies.
+
+
 ## Release History
 
 - **1.0.0**
