@@ -5,13 +5,14 @@ using System.Threading.Tasks;
 using Finbuckle.MultiTenant;
 using FluentAssertions;
 using Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Model;
+using Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
 namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
 {
-    public class FinbuckleRavenDbStoreTest : RavenDbTestBase
+    public class FinbuckleRavenDbStoreWithReservationDocumentsTest : RavenDbTestBase
     {
         [Fact]
         public async Task ShouldCreateTenantWithUniqueIdentifier()
@@ -26,8 +27,13 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 };
 
                 (await store.TryAddAsync(tenantA)).Should().BeTrue();
-                await AssertCompareExchangeKeyExistsWithValueAsync(
-                    $"tidentifier/{tenantA.Identifier}",
+
+                await AssertCompareExchangeKeyDoesNotExistAsync(
+                    $"tidentifier/{tenantA.Identifier}"
+                );
+                await AssertReservationDocumentExistsWithValueAsync(
+                    UniqueReservationType.Identifier,
+                    tenantA.Identifier,
                     tenantA.Id
                 );
             }
@@ -41,8 +47,13 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                     Name = "Tenant B",
                 };
                 (await store.TryAddAsync(tenantB)).Should().BeTrue();
-                await AssertCompareExchangeKeyExistsWithValueAsync(
-                    $"tidentifier/{tenantB.Identifier}",
+
+                await AssertCompareExchangeKeyDoesNotExistAsync(
+                    $"tidentifier/{tenantB.Identifier}"
+                );
+                await AssertReservationDocumentExistsWithValueAsync(
+                    UniqueReservationType.Identifier,
+                    tenantB.Identifier,
                     tenantB.Id
                 );
 
@@ -53,8 +64,12 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                     Name = "Tenant C",
                 };
                 (await store.TryAddAsync(tenantC)).Should().BeTrue();
-                await AssertCompareExchangeKeyExistsWithValueAsync(
-                    $"tidentifier/{tenantC.Identifier}",
+                await AssertCompareExchangeKeyDoesNotExistAsync(
+                    $"tidentifier/{tenantC.Identifier}"
+                );
+                await AssertReservationDocumentExistsWithValueAsync(
+                    UniqueReservationType.Identifier,
+                    tenantC.Identifier,
                     tenantC.Id
                 );
             }
@@ -145,8 +160,10 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 TenantInfo tenant = await store.TryGetAsync("abc");
                 tenant.Identifier.Should().Be("tenant-abc");
                 tenant.Name.Should().Be("Tenant ABC");
-                await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tidentifier/tenant-abc",
+
+                await AssertReservationDocumentExistsWithValueAsync(
+                    UniqueReservationType.Identifier,
+                    "tenant-abc",
                     tenant.Id
                 );
 
@@ -157,13 +174,14 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
 
                 WaitForUserToContinueTheTest(DocumentStore);
 
-                await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tidentifier/new-identifier",
+                await AssertReservationDocumentExistsWithValueAsync(
+                    UniqueReservationType.Identifier,
+                    "new-identifier",
                     tenant.Id
                 );
-                await AssertCompareExchangeKeyDoesNotExistAsync(
-                    "tidentifier/tenant-abc",
-                    "old identifier was deleted"
+                await AssertReservationDocumentDoesNotExistAsync(
+                    UniqueReservationType.Identifier,
+                    "tenant-abc"
                 );
             }
 
@@ -173,6 +191,8 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 tenant.Identifier.Should().Be("new-identifier");
                 tenant.Name.Should().Be("New Name");
             }
+
+            WaitForUserToContinueTheTest(DocumentStore);
         }
 
         [Fact]
@@ -209,16 +229,19 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 // try to update from store A
                 (await storeA.TryUpdateAsync(tenantFromStoreA)).Should().BeFalse();
 
-                await AssertCompareExchangeKeyDoesNotExistAsync(
-                    "tidentifier/tenant-abc",
+                await AssertReservationDocumentDoesNotExistAsync(
+                    UniqueReservationType.Identifier,
+                    "tenant-abc",
                     "was modified from storeB."
                 );
-                await AssertCompareExchangeKeyDoesNotExistAsync(
-                    "tidentifier/new-identifier",
+                await AssertReservationDocumentDoesNotExistAsync(
+                    UniqueReservationType.Identifier,
+                    "new-identifier",
                     "modification from storeA failed due to concurrency."
                 );
-                await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tidentifier/new-identifier22222",
+                await AssertReservationDocumentExistsWithValueAsync(
+                    UniqueReservationType.Identifier,
+                    "new-identifier22222",
                     tenantFromStoreA.Id,
                     "storeB successfully modified the tenant."
                 );
@@ -261,12 +284,14 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
 
                 WaitForUserToContinueTheTest(DocumentStore);
 
-                await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tidentifier/tenant-foobar",
+                await AssertReservationDocumentExistsWithValueAsync(
+                    UniqueReservationType.Identifier,
+                    "tenant-foobar",
                     "foobar"
                 );
-                await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tidentifier/tenant-abc",
+                await AssertReservationDocumentExistsWithValueAsync(
+                    UniqueReservationType.Identifier,
+                    "tenant-abc",
                     "abc"
                 );
             }
@@ -291,8 +316,9 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
             {
                 FinbuckleRavenDbStore<TenantInfo> store = CreateTenantStore();
                 (await store.TryRemoveAsync("abc")).Should().BeTrue();
-                await AssertCompareExchangeKeyDoesNotExistAsync(
-                    "tidentifier/tenant-abc",
+                await AssertReservationDocumentDoesNotExistAsync(
+                    UniqueReservationType.Identifier,
+                    "tenant-abc",
                     "we removed the tenant"
                 );
                 (await store.TryGetAsync("abc")).Should().BeNull();
@@ -341,8 +367,9 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
 
                 // try to delete from store A
                 (await storeA.TryRemoveAsync("abc")).Should().BeFalse();
-                await AssertCompareExchangeKeyExistsWithValueAsync(
-                    "tidentifier/new-identifier22222",
+                await AssertReservationDocumentExistsWithValueAsync(
+                    UniqueReservationType.Identifier,
+                    "new-identifier22222",
                     "abc",
                     "storeB updated the tenant"
                 );
@@ -461,7 +488,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
                 () => DocumentStore.OpenAsyncSession(),
                 new UniqueValuesReservationOptions
                 {
-                    UseReservationDocumentsForUniqueValues = false,
+                    UseReservationDocumentsForUniqueValues = true,
                 },
                 logger.Object
             );

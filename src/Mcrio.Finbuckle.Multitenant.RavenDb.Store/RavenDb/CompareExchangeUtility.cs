@@ -1,7 +1,8 @@
 using System;
+using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
-using Finbuckle.MultiTenant;
-using Raven.Client.Documents;
+using Microsoft.Extensions.Logging;
 using Raven.Client.Documents.Operations.CompareExchange;
 using Raven.Client.Documents.Session;
 
@@ -24,131 +25,149 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
         }
 
         /// <summary>
-        /// Represents different compare exchange reservation types.
-        /// </summary>
-        public enum ReservationType
-        {
-            /// <summary>
-            /// Tenant identifier reservation type.
-            /// </summary>
-            Identifier,
-        }
-
-        /// <summary>
-        /// Creates a compare exchange reservation.
-        /// </summary>
-        /// <param name="reservationType">Reservation type.</param>
-        /// <param name="entity">Entity we are making the reservation for.</param>
-        /// <param name="expectedUniqueValue">Compare exchange unique value requested for given reservation type.</param>
-        /// <param name="data">Custom data to be stored.</param>
-        /// <typeparam name="TValue">Type of data to be stored.</typeparam>
-        /// <typeparam name="TTenantInfo">Type of entity we are storing the unique value for.</typeparam>
-        /// <returns>The <see cref="Task"/> that represents the asynchronous operation.</returns>
-        internal Task<bool> CreateReservationAsync<TValue, TTenantInfo>(
-            ReservationType reservationType,
-            TTenantInfo entity,
-            string expectedUniqueValue,
-            TValue data = default!)
-            where TTenantInfo : ITenantInfo
-        {
-            return CreateReservationAsync(
-                CreateCompareExchangeKey(reservationType, entity, expectedUniqueValue),
-                data
-            );
-        }
-
-        /// <summary>
-        /// Removes an existing compare exchange reservation.
-        /// </summary>
-        /// <param name="reservationType">Reservation type.</param>
-        /// <param name="entity">Entity we are making the reservation for.</param>
-        /// <param name="expectedUniqueValue">Unique value requested for given reservation type.</param>
-        /// <typeparam name="TTenantInfo">Type of entity we are storing the unique value for.</typeparam>
-        /// <returns>The <see cref="Task"/> that represents the asynchronous operation.</returns>
-        internal Task<bool> RemoveReservationAsync<TTenantInfo>(
-            ReservationType reservationType,
-            TTenantInfo entity,
-            string expectedUniqueValue)
-            where TTenantInfo : ITenantInfo
-        {
-            return RemoveReservationAsync(
-                CreateCompareExchangeKey(reservationType, entity, expectedUniqueValue)
-            );
-        }
-
-        /// <summary>
-        /// Gets the compare exchange reservation key prefix for the given reservation type.
-        /// </summary>
-        /// <param name="reservationType"></param>
-        /// <returns>The compare exchange key prefix for the given reservation type.</returns>
-        protected virtual string GetKeyPrefix(ReservationType reservationType)
-        {
-            return reservationType switch
-            {
-                // ReSharper disable once StringLiteralTypo
-                ReservationType.Identifier => "tidentifier",
-                _ => throw new Exception($"Unhandled reservation type {reservationType}")
-            };
-        }
-
-        /// <summary>
         /// Creates the compare exchange key for th given reservation type, entity and unique value.
         /// </summary>
         /// <param name="reservationType">Type of reservation.</param>
-        /// <param name="entity">Entity related to the reservation.</param>
         /// <param name="expectedUniqueValue">The unique value.</param>
-        /// <typeparam name="TTenantInfo">Type of entity we are making the reservation for.</typeparam>
         /// <returns>The complete compare exchange key.</returns>
-        protected virtual string CreateCompareExchangeKey<TTenantInfo>(
-            ReservationType reservationType,
-            TTenantInfo entity,
+        public virtual string CreateCompareExchangeKey(
+            UniqueReservationType reservationType,
             string expectedUniqueValue)
-            where TTenantInfo : ITenantInfo?
         {
-            return GetKeyPrefix(reservationType).TrimEnd('/') + '/' + expectedUniqueValue;
-        }
-
-        private async Task<bool> CreateReservationAsync<TValue>(
-            string cmpExchangeKey,
-            TValue data = default!)
-        {
-            IDocumentStore documentStore = _documentSession.Advanced.DocumentStore;
-
-            CompareExchangeResult<TValue> compareExchangeResult = await documentStore.Operations.SendAsync(
-                new PutCompareExchangeValueOperation<TValue>(cmpExchangeKey, data!, 0)
-            ).ConfigureAwait(false);
-
-            return compareExchangeResult.Successful;
-        }
-
-        private Task<CompareExchangeValue<TValue>?> GetReservationAsync<TValue>(string cmpExchangeKey)
-        {
-            IDocumentStore store = _documentSession.Advanced.DocumentStore;
-            return store.Operations.SendAsync(
-                new GetCompareExchangeValueOperation<TValue>(cmpExchangeKey)
-            );
-        }
-
-        private async Task<bool> RemoveReservationAsync(string cmpExchangeKey)
-        {
-            IDocumentStore documentStore = _documentSession.Advanced.DocumentStore;
-
-            // get existing in order to get the index
-            CompareExchangeValue<string>? existingResult = await GetReservationAsync<string>(
-                cmpExchangeKey
-            ).ConfigureAwait(false);
-
-            if (existingResult is null)
+            var prefix = reservationType switch
             {
-                // it does not exist so return positive result
-                return true;
+                // ReSharper disable once StringLiteralTypo
+                UniqueReservationType.Identifier => "tidentifier",
+                _ => throw new Exception($"Unhandled reservation type {reservationType}")
+            };
+            return $"{prefix.TrimEnd('/')}/{expectedUniqueValue}";
+        }
+
+        /// <summary>
+        /// Prepare reservation deletion as part of a cluster wide transaction.
+        /// </summary>
+        /// <param name="uniqueReservationType"></param>
+        /// <param name="uniqueValueNormalized"></param>
+        /// <param name="logger"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Instance of <see cref="Task"/>.</returns>
+        internal async Task PrepareReservationForRemovalAsync(
+            UniqueReservationType uniqueReservationType,
+            string uniqueValueNormalized,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            Debug.Assert(
+                ((AsyncDocumentSession)_documentSession).TransactionMode == TransactionMode.ClusterWide,
+                "Expected cluster wide transaction mode"
+            );
+
+            if (string.IsNullOrWhiteSpace(uniqueValueNormalized))
+            {
+                throw new ArgumentException(
+                    $"Unexpected empty value for {nameof(uniqueValueNormalized)} in {nameof(PrepareReservationForRemovalAsync)}"
+                );
             }
 
-            CompareExchangeResult<string> compareExchangeResult = await documentStore.Operations.SendAsync(
-                new DeleteCompareExchangeValueOperation<string>(cmpExchangeKey, existingResult.Index)
+            string compareExchangeKey = CreateCompareExchangeKey(
+                uniqueReservationType,
+                uniqueValueNormalized
+            );
+            CompareExchangeValue<string>? compareExchange = await _documentSession
+                .Advanced
+                .ClusterTransaction
+                .GetCompareExchangeValueAsync<string>(compareExchangeKey, cancellationToken)
+                .ConfigureAwait(false);
+            if (compareExchange != null)
+            {
+                _documentSession.Advanced.ClusterTransaction.DeleteCompareExchangeValue(
+                    compareExchange
+                );
+            }
+            else
+            {
+                logger.LogWarning(
+                    "On {} old reservation delete, unexpectedly missing compare exchange reservation for value {}",
+                    uniqueReservationType.ToString(),
+                    uniqueValueNormalized
+                );
+            }
+        }
+
+        /// <summary>
+        /// Prepare reservation update by checking if provided new value already exists, and if it doesn't
+        /// mark old reservation for deletion and add new reservation.
+        /// </summary>
+        /// <param name="uniqueReservationType"></param>
+        /// <param name="newUniqueValueNormalized"></param>
+        /// <param name="oldUniqueValueNormalized"></param>
+        /// <param name="compareExchangeValue">Value that will be assigned to the compare exchange.</param>
+        /// <param name="logger"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>TRUE if success, FALSE otherwise.</returns>
+        internal async Task<bool> PrepareReservationUpdateInUnitOfWorkAsync(
+            UniqueReservationType uniqueReservationType,
+            string newUniqueValueNormalized,
+            string oldUniqueValueNormalized,
+            string compareExchangeValue,
+            ILogger logger,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(newUniqueValueNormalized))
+            {
+                throw new ArgumentException(
+                    $"Unexpected empty value for {nameof(newUniqueValueNormalized)} in {nameof(PrepareReservationUpdateInUnitOfWorkAsync)}");
+            }
+
+            if (string.IsNullOrWhiteSpace(oldUniqueValueNormalized))
+            {
+                throw new ArgumentException(
+                    $"Unexpected empty value for {nameof(oldUniqueValueNormalized)} in {nameof(PrepareReservationUpdateInUnitOfWorkAsync)}");
+            }
+
+            Debug.Assert(
+                ((AsyncDocumentSession)_documentSession).TransactionMode == TransactionMode.ClusterWide,
+                "Expected cluster wide transaction mode"
+            );
+
+            // check if new value is unique
+            string newValueCompareExchangeKey = CreateCompareExchangeKey(
+                uniqueReservationType,
+                newUniqueValueNormalized
+            );
+            CompareExchangeValue<string>? existingCompareExchangeWithNewValue = await _documentSession
+                .Advanced
+                .ClusterTransaction
+                .GetCompareExchangeValueAsync<string>(newValueCompareExchangeKey, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (existingCompareExchangeWithNewValue != null)
+            {
+                logger.LogInformation(
+                    "Failed reserving {} {} as already exists",
+                    uniqueReservationType.ToString(),
+                    newUniqueValueNormalized
+                );
+                return false;
+            }
+
+            await PrepareReservationForRemovalAsync(
+                uniqueReservationType,
+                oldUniqueValueNormalized,
+                logger,
+                cancellationToken
             ).ConfigureAwait(false);
 
-            return compareExchangeResult.Successful;
+            // prepare new reservation
+            _documentSession
+                .Advanced
+                .ClusterTransaction
+                .CreateCompareExchangeValue(
+                    newValueCompareExchangeKey,
+                    compareExchangeValue
+                );
+
+            return true;
         }
     }
 }

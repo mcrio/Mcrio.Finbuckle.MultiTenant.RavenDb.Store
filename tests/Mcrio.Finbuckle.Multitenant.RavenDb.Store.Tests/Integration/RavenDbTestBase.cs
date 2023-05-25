@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using FluentAssertions;
+using Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Conventions;
 using Raven.Client.Documents.Operations.CompareExchange;
 using Raven.TestDriver;
 
@@ -11,6 +13,22 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         protected RavenDbTestBase()
         {
             DocumentStore = GetDocumentStore();
+        }
+
+        protected override void PreInitialize(IDocumentStore documentStore)
+        {
+            documentStore.Conventions.FindCollectionName = type =>
+            {
+                if (FinbuckleMultiTenantRavenDbConventions.TryGetCollectionName(
+                        type,
+                        out string? collectionName))
+                {
+                    return collectionName;
+                }
+
+                return DocumentConventions.DefaultGetCollectionName(type);
+            };
+            documentStore.Conventions.UseOptimisticConcurrency = true;
         }
 
         /// <summary>
@@ -32,6 +50,39 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.Tests.Integration
         {
             CompareExchangeValue<string> result = await GetCompareExchangeAsync<string>(DocumentStore, cmpExchangeKey);
             result.Should().BeNull($"cmp exchange {cmpExchangeKey} should not exist because {because}");
+        }
+
+        protected async Task AssertReservationDocumentExistsWithValueAsync(
+            UniqueReservationType uniqueReservationType,
+            string expectedUniqueValue,
+            string expectedReferenceDocumentId,
+            string because = "")
+        {
+            var uniqueUtility = new UniqueReservationDocumentUtility(
+                DocumentStore.OpenAsyncSession(),
+                uniqueReservationType,
+                expectedUniqueValue
+            );
+            bool exists = await uniqueUtility.CheckIfUniqueIsTakenAsync();
+            exists.Should().BeTrue(because);
+
+            UniqueReservation reservation = await uniqueUtility.LoadReservationAsync();
+            reservation.Should().NotBeNull();
+            reservation.ReferenceId.Should().Be(expectedReferenceDocumentId);
+        }
+
+        protected async Task AssertReservationDocumentDoesNotExistAsync(
+            UniqueReservationType uniqueReservationType,
+            string expectedUniqueValue,
+            string because = "")
+        {
+            var uniqueUtility = new UniqueReservationDocumentUtility(
+                DocumentStore.OpenAsyncSession(),
+                uniqueReservationType,
+                expectedUniqueValue
+            );
+            bool exists = await uniqueUtility.CheckIfUniqueIsTakenAsync();
+            exists.Should().BeFalse(because);
         }
 
         private static Task<CompareExchangeValue<TValue>> GetCompareExchangeAsync<TValue>(

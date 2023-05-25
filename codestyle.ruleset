@@ -2,7 +2,7 @@
 <!-- ================================================================== -->
 <!-- ALL CODES: https://stylecopanalyzersstatus.azurewebsites.net/      -->
 <!-- ================================================================== -->
-<RuleSet Name="Mcrio.CodeStyle" ToolsVersion="15.0">
+<RuleSet Name="LastMinuteActivities" ToolsVersion="15.0">
     <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
         <!--<Rule Id="SA1000" Action="None" />-->
         <!--<Rule Id="SA1001" Action="None" />-->
@@ -43,14 +43,14 @@
         <!--<Rule Id="SA1107" Action="None" />-->
         <!--<Rule Id="SA1108" Action="None" />-->
         <!--<Rule Id="SA1110" Action="None" />-->
-        <Rule Id="SA1111" Action="None" /><!--  [SA1111] Closing parenthesis must be on line of last parameter -->
+        <Rule Id="SA1111" Action="None"/><!--  [SA1111] Closing parenthesis must be on line of last parameter -->
         <!--<Rule Id="SA1112" Action="None" />-->
         <!--<Rule Id="SA1113" Action="None" />-->
         <!--<Rule Id="SA1114" Action="None" />-->
         <!--<Rule Id="SA1115" Action="None" />-->
         <!--<Rule Id="SA1116" Action="None" />-->
         <!--<Rule Id="SA1117" Action="None" />-->
-        <Rule Id="SA1118" Action="None" /><!--  [SA1118] The parameter spans multiple lines -->
+        <Rule Id="SA1118" Action="None"/><!--  [SA1118] The parameter spans multiple lines -->
         <Rule Id="SA1119" Action="None"/><!--   [SA1119] Statement must not use unnecessary parenthesis -->
         <!--<Rule Id="SA1120" Action="None" />-->
         <!--<Rule Id="SA1121" Action="None" />-->
@@ -87,7 +87,7 @@
         <!--<Rule Id="SA1302" Action="None" />-->
         <!--<Rule Id="SA1303" Action="None" />-->
         <!--<Rule Id="SA1304" Action="None" />-->
-        <Rule Id="SA1305" Action="None" /><!-- [SA1305] Field must not use Hungarian notation -->
+        <Rule Id="SA1305" Action="None"/><!-- [SA1305] Field must not use Hungarian notation -->
         <!--<Rule Id="SA1306" Action="None" />-->
         <!--<Rule Id="SA1307" Action="None" />-->
         <!--<Rule Id="SA1308" Action="None" />-->
@@ -98,7 +98,7 @@
         <!--<Rule Id="SA1313" Action="None" />-->
         <!--<Rule Id="SA1400" Action="None" />-->
         <!--<Rule Id="SA1401" Action="None" />-->
-        <Rule Id="SA1402" Action="None" /><!-- File may contain a single class -->
+        <Rule Id="SA1402" Action="None"/><!-- File may contain a single class -->
         <!--<Rule Id="SA1403" Action="None" />-->
         <!--<Rule Id="SA1404" Action="None" />-->
         <!--<Rule Id="SA1405" Action="None" />-->
@@ -128,7 +128,7 @@
         <!--<Rule Id="SA1518" Action="None" />-->
         <!--<Rule Id="SA1519" Action="None" />-->
         <!--<Rule Id="SA1520" Action="None" />-->
-<!--        <Rule Id="SA1600" Action="None" />&lt;!&ndash; 	Elements should be documented &ndash;&gt;-->
+        <!--        <Rule Id="SA1600" Action="None" />&lt;!&ndash; 	Elements should be documented &ndash;&gt;-->
         <!--<Rule Id="SA1601" Action="None" />-->
         <!--<Rule Id="SA1602" Action="None" />-->
         <!--<Rule Id="SA1605" Action="None" />-->
@@ -136,12 +136,12 @@
         <!--<Rule Id="SA1608" Action="None" />-->
         <!--<Rule Id="SA1611" Action="None" />-->
         <!--<Rule Id="SA1612" Action="None" />-->
-        <Rule Id="SA1614" Action="None" /><!-- 	Element parameter documentation should have text -->
+        <Rule Id="SA1614" Action="None"/><!-- 	Element parameter documentation should have text -->
         <!--<Rule Id="SA1615" Action="None" />-->
         <!--<Rule Id="SA1618" Action="None" />-->
         <!--<Rule Id="SA1619" Action="None" />-->
         <!--<Rule Id="SA1620" Action="None" />-->
-        <Rule Id="SA1623" Action="None" /><!-- SA1623 Properties documentation summary must begin with Gets or Sets -->
+        <Rule Id="SA1623" Action="None"/><!-- SA1623 Properties documentation summary must begin with Gets or Sets -->
         <!--<Rule Id="SA1625" Action="None" />-->
         <!--<Rule Id="SA1626" Action="None" />-->
         <!--<Rule Id="SA1627" Action="None" />-->
@@ -154,7 +154,7 @@
         <!--<Rule Id="SA1638" Action="None" />-->
         <!--<Rule Id="SA1640" Action="None" />-->
         <!--<Rule Id="SA1641" Action="None" />-->
-        <Rule Id="SA1642" Action="None" /><!-- [SA1642] Constructor must have default text -->
+        <Rule Id="SA1642" Action="None"/><!-- [SA1642] Constructor must have default text -->
         <!--<Rule Id="SA1643" Action="None" />-->
         <!--<Rule Id="SA1648" Action="None" />-->
         <Rule Id="SA1649" Action="None"/><!-- [SA1649] File name must match first type name. -->

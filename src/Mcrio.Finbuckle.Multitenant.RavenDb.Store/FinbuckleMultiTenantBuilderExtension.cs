@@ -23,16 +23,19 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
         /// </summary>
         /// <param name="builder">Multi-tenant builder.</param>
         /// <param name="documentSessionServiceLocator">RavenDb document session provider.</param>
+        /// <param name="uniqueValuesReservationOptionsConfig">Configure Unique value reservations options.</param>
         /// <typeparam name="TTenantInfo">Tenant type.</typeparam>
         /// <returns>Multi tenant builder.</returns>
         public static FinbuckleMultiTenantBuilder<TTenantInfo> WithRavenDbStore<TTenantInfo>(
             this FinbuckleMultiTenantBuilder<TTenantInfo> builder,
-            DocumentSessionServiceLocator documentSessionServiceLocator)
+            DocumentSessionServiceLocator documentSessionServiceLocator,
+            Action<UniqueValuesReservationOptions>? uniqueValuesReservationOptionsConfig = null)
             where TTenantInfo : class, ITenantInfo, new()
         {
             return WithRavenDbStore<TTenantInfo, FinbuckleRavenDbStore<TTenantInfo>>(
                 builder,
-                documentSessionServiceLocator
+                documentSessionServiceLocator,
+                uniqueValuesReservationOptionsConfig
             );
         }
 
@@ -41,6 +44,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
         /// </summary>
         /// <param name="builder">Multi-tenant builder.</param>
         /// <param name="documentSessionServiceLocator">RavenDb document session provider.</param>
+        /// <param name="uniqueValuesReservationOptionsConfig">Configure Unique value reservations options.</param>
         /// <typeparam name="TTenantInfo">Tenant type.</typeparam>
         /// <typeparam name="TRavenDbStore">RavenDb store type.</typeparam>
         /// <returns>Multi tenant builder.</returns>
@@ -48,10 +52,15 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store
             TTenantInfo,
             TRavenDbStore>(
             this FinbuckleMultiTenantBuilder<TTenantInfo> builder,
-            DocumentSessionServiceLocator documentSessionServiceLocator)
+            DocumentSessionServiceLocator documentSessionServiceLocator,
+            Action<UniqueValuesReservationOptions>? uniqueValuesReservationOptionsConfig = null)
             where TTenantInfo : class, ITenantInfo, new()
             where TRavenDbStore : IMultiTenantStore<TTenantInfo>
         {
+            var uniqueValueRelatedOptions = new UniqueValuesReservationOptions();
+            uniqueValuesReservationOptionsConfig?.Invoke(uniqueValueRelatedOptions);
+            builder.Services.TryAddSingleton(uniqueValueRelatedOptions);
+
             builder.Services.TryAddScoped<DocumentSessionProvider>(
                 provider => () => documentSessionServiceLocator(provider)
             );
