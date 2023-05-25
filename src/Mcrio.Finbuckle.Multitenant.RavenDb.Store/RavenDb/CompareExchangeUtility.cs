@@ -100,7 +100,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
         /// </summary>
         /// <param name="uniqueReservationType"></param>
         /// <param name="newUniqueValueNormalized"></param>
-        /// <param name="oldUniqueValueNormalized"></param>
+        /// <param name="oldUniqueValueNormalized">Old unique value reservation. If NULL we assume there was no previous reservation.</param>
         /// <param name="compareExchangeValue">Value that will be assigned to the compare exchange.</param>
         /// <param name="logger"></param>
         /// <param name="cancellationToken"></param>
@@ -108,7 +108,7 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
         internal async Task<bool> PrepareReservationUpdateInUnitOfWorkAsync(
             UniqueReservationType uniqueReservationType,
             string newUniqueValueNormalized,
-            string oldUniqueValueNormalized,
+            string? oldUniqueValueNormalized,
             string compareExchangeValue,
             ILogger logger,
             CancellationToken cancellationToken)
@@ -117,12 +117,6 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
             {
                 throw new ArgumentException(
                     $"Unexpected empty value for {nameof(newUniqueValueNormalized)} in {nameof(PrepareReservationUpdateInUnitOfWorkAsync)}");
-            }
-
-            if (string.IsNullOrWhiteSpace(oldUniqueValueNormalized))
-            {
-                throw new ArgumentException(
-                    $"Unexpected empty value for {nameof(oldUniqueValueNormalized)} in {nameof(PrepareReservationUpdateInUnitOfWorkAsync)}");
             }
 
             Debug.Assert(
@@ -151,12 +145,15 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
                 return false;
             }
 
-            await PrepareReservationForRemovalAsync(
-                uniqueReservationType,
-                oldUniqueValueNormalized,
-                logger,
-                cancellationToken
-            ).ConfigureAwait(false);
+            if (oldUniqueValueNormalized != null)
+            {
+                await PrepareReservationForRemovalAsync(
+                    uniqueReservationType,
+                    oldUniqueValueNormalized,
+                    logger,
+                    cancellationToken
+                ).ConfigureAwait(false);
+            }
 
             // prepare new reservation
             _documentSession

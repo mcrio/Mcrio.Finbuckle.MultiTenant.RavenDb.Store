@@ -7,6 +7,7 @@
         <CodeAnalysisRuleSet>..\..\codestyle.tests.ruleset</CodeAnalysisRuleSet>
         <AssemblyName>Mcrio.Finbuckle.MultiTenant.RavenDb.Store</AssemblyName>
         <RootNamespace>Mcrio.Finbuckle.MultiTenant.RavenDb.Store</RootNamespace>
+        <PackageId>Mcrio.Finbuckle.MultiTenant.RavenDb.Store</PackageId>
         <Description>RavenDB implementations of the Finbuckle.MultiTenant store.</Description>
         <Authors>Nikola Josipović</Authors>
         <Company>https://github.com/mcrio</Company>

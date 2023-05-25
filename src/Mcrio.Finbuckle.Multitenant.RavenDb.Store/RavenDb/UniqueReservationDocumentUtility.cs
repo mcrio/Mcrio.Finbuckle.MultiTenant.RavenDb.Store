@@ -145,21 +145,15 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
         /// Update reservation by marking the old reservation document for deletion and adding a new one to
         /// the unit of work.
         /// </summary>
-        /// <param name="oldUniqueValue">Old unique value.</param>
+        /// <param name="oldUniqueValue">Old unique value. If NULL we assume there was no previous reservation.</param>
         /// <param name="ownerDocumentId">Id of the document the reservation belongs to.</param>
         /// <returns>Task.</returns>
         /// <exception cref="DuplicateException">When the unique value reservation already exists.</exception>
         /// <exception cref="ReservationDocumentAlreadyAddedToUnitOfWorkException">When the reservation document was already added to unit of work.</exception>
         public async Task<TReservation> UpdateReservationAndAddToUnitOfWork(
-            string oldUniqueValue,
+            string? oldUniqueValue,
             string ownerDocumentId)
         {
-            if (string.IsNullOrWhiteSpace(oldUniqueValue))
-            {
-                throw new ArgumentException(
-                    $"Unexpected empty value for {nameof(oldUniqueValue)} in {nameof(UpdateReservationAndAddToUnitOfWork)}");
-            }
-
             if (string.IsNullOrWhiteSpace(ownerDocumentId))
             {
                 throw new ArgumentException(
@@ -173,15 +167,18 @@ namespace Mcrio.Finbuckle.MultiTenant.RavenDb.Store.RavenDb
 
             _reservationAddedToUow = true;
 
-            // Get old reservation and mark it for deletion
-            string oldReservationDocumentId = GetReservationDocumentId(oldUniqueValue);
-            UniqueReservation? oldReservation = await _session
-                .LoadAsync<UniqueReservation>(oldReservationDocumentId)
-                .ConfigureAwait(false);
-
-            if (oldReservation != null)
+            if (oldUniqueValue != null)
             {
-                _session.Delete(oldReservation);
+                // Get old reservation and mark it for deletion
+                string oldReservationDocumentId = GetReservationDocumentId(oldUniqueValue);
+                UniqueReservation? oldReservation = await _session
+                    .LoadAsync<UniqueReservation>(oldReservationDocumentId)
+                    .ConfigureAwait(false);
+
+                if (oldReservation != null)
+                {
+                    _session.Delete(oldReservation);
+                }
             }
 
             return await NewReservationCreateAndAddToUow(ownerDocumentId).ConfigureAwait(false);
